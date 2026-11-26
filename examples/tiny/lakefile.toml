@@ -1,0 +1,7 @@
+name = "flow-example"
+defaultTargets = ["Main"]
+
+[[lean_lib]]
+name = "Main"
+srcDir = "src"
+roots = ["Main", "Demo.Left", "Demo.Right", "Demo.Spare"]
