@@ -122,10 +122,10 @@ A provider wrapper can use the same contract. Model output is advisory text. A p
 
 Four examples show why the useful unit of work varies. Removing an unused Fock pairing block saved **372 source lines** while retaining the public theorem. In partial Hecke duality, applying the forward implication twice with swapped indices and the dual-lattice involution removed the separate converse calculation. In the Hodge–Tate cup projections, two results share the same objectwise splitting. The Fock vacuum refactor provides an example with structural replay: specializing a single proof at both call sites removed 82 source lines and reduced the union of the two measured proof bodies from 32,151 to 24,207 expression nodes. [#1337](https://github.com/leanprover-community/riemann-hypothesis/pull/1337) · [#7344](https://github.com/leanprover-community/riemann-hypothesis/pull/7344) · [#7709](https://github.com/leanprover-community/riemann-hypothesis/pull/7709) · [#4575](https://github.com/leanprover-community/riemann-hypothesis/pull/4575)
 
-As of November 26, 2026, GitHub records **127 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
+As of November 26, 2026, GitHub records **128 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
 
 <details>
-<summary>Current main history · 64 merged PRs</summary>
+<summary>Current main history · 65 merged PRs</summary>
 
 | PR | Accepted change |
 | --- | --- |
@@ -193,6 +193,7 @@ As of November 26, 2026, GitHub records **127 merged upstream PRs** from this wo
 | [#8346](https://github.com/leanprover-community/riemann-hypothesis/pull/8346) | Share the finite-place integrality argument for hermitian pairings |
 | [#8386](https://github.com/leanprover-community/riemann-hypothesis/pull/8386) | Share the sign-case calculation in the Frobenius cycle root lemma |
 | [#8408](https://github.com/leanprover-community/riemann-hypothesis/pull/8408) | refactor(Lib/PadicComparison/HodgeTate): share the Yoneda composition step |
+| [#8682](https://github.com/leanprover-community/riemann-hypothesis/pull/8682) | Share the integral factorization for orthogonal sums in the model inner product and the Weil action |
 
 </details>
 
