@@ -1,6 +1,7 @@
 """Resolve source hints to declarations and inspect their compiled local binders."""
 import argparse
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 import gzip
 import json
 from pathlib import Path
@@ -40,7 +41,9 @@ def check(obj, rows, scanner):
     return result
 
 
-def run(manifest, candidates, artifacts, leantar, scanner, ledger):
+def run(manifest, candidates, artifacts, leantar, scanner, ledger, jobs=1):
+    if jobs < 1:
+        raise ValueError("jobs must be positive")
     with gzip.open(manifest) as stream:
         tree = json.loads(next(stream))["source_tree"]
         archive = {row[0]: row for row in map(json.loads, stream)}
@@ -56,13 +59,16 @@ def run(manifest, candidates, artifacts, leantar, scanner, ledger):
                     raise ValueError("output belongs to a different source tree")
                 done.add(rec["module"])
     pending = [m for m in by_module if m not in done]
+    batch_size = max(8, jobs)
     with ledger.open("a") as out:
-        for i in range(0, len(pending), 8):
-            batch = pending[i:i + 8]
-            with tempfile.TemporaryDirectory(prefix="rh-local-have-") as tmp:
-                files = unpack([archive[m] for m in batch], artifacts, leantar, tmp)
-                for m, obj in zip(batch, files, strict=True):
-                    rows = check(obj, by_module[m], scanner)
+        for i in range(0, len(pending), batch_size):
+            batch = pending[i:i + batch_size]
+            with tempfile.TemporaryDirectory(prefix="rh-local-have-") as tmp, ThreadPoolExecutor(jobs) as pool:
+                files = unpack([archive[m] for m in batch], artifacts, leantar, tmp, workers=min(jobs, len(batch)))
+                tasks = [pool.submit(check, obj, by_module[m], scanner)
+                         for m, obj in zip(batch, files, strict=True)]
+                for m, task in zip(batch, tasks, strict=True):
+                    rows = task.result()
                     print(json.dumps(dict(tree=tree, module=m, rows=rows), ensure_ascii=False), file=out, flush=True)
 
 
@@ -70,4 +76,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("manifest", "candidates", "artifacts", "leantar", "scanner", "ledger"):
         parser.add_argument(arg, type=Path)
+    parser.add_argument("--jobs", type=int, default=1, help="concurrent module checks, in stable report order")
     run(**vars(parser.parse_args()))

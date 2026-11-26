@@ -84,6 +84,10 @@ For a local binding whose source extent is ambiguous, the cascade can ask Lean f
 
 After a larger rewrite, pass `--before PREVIOUS_REPORT_DIRECTORY` to the workflow with the same roots. The `newly_outside_roots` list contains each former owner and name once. Use it on corresponding before/after builds, then check surviving callers and registrations before considering deletion. Independent candidates can run in separate temporary directories with the same imported build products. Compile modules that depend on one another in import order.
 
+For a batch of proposed binding deletions, `check_local_haves.py --jobs N` groups all sites in a module into one scanner call, unpacks the matching artifacts in parallel, and writes the results in a stable order. On 15 newly nominated sites across 12 RH m42b modules, the one-worker and twelve-worker reports were byte-identical. All 15 bindings had a compiled use. Independent module checks can share the same read-only artifact cache and keep temporary products separate. [Batch checker](tools/check_local_haves.py)
+
+A separate m42b application replaced a seven-line derivation of measurable multiplication on the Bessel graph with a single instance binding. This removed six lines and 445 bytes. The affected module’s 42 reachable proof bodies used 37,354 distinct expression nodes before the change and 37,105 after it. The target declaration used 5,256 and 4,086 elaboration heartbeats respectively. This is a module-local measurement. [RH application #8074](https://github.com/leanprover-community/riemann-hypothesis/pull/8074)
+
 ## Optional LLM interface
 
 Use a model when the open question is mathematical. For example, do two constructions share a useful invariant, which hypothesis should become an argument, or would the proposed helper make the proof harder to follow? The interface sends one selected candidate through standard input and returns the reviewer's text on standard output. The packet contains theorem names, common roots, and matched line ranges. The optional `--source` flag includes the source between the first and last match on each side.

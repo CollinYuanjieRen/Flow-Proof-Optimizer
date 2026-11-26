@@ -16,7 +16,7 @@ def pack(value):
     return zlib.compress(json.dumps(value, separators=(",", ":"), ensure_ascii=False).encode(), 1)
 
 
-def unpack(batch, artifacts, leantar, directory):
+def unpack(batch, artifacts, leantar, directory, *, workers=1):
     jobs, files = [], []
     for i, (module, key, archive, sha) in enumerate(batch):
         obj = artifacts / archive
@@ -28,7 +28,7 @@ def unpack(batch, artifacts, leantar, directory):
         files.append((dest / module.split(".")[-1]).with_suffix(".olean"))
     # Use the RH cache client's Rust stack setting for large compressed Lean terms.
     env = {**os.environ, "RUST_MIN_STACK": str(max(8388608, int(os.environ.get("RUST_MIN_STACK", 0))))}
-    subprocess.run([leantar, "--jobs", "1", "-f", "-x", "-j", "-"],
+    subprocess.run([leantar, "--jobs", str(workers), "-f", "-x", "-j", "-"],
                    input=json.dumps(jobs), text=True, check=True, env=env)
     return files
 
