@@ -1,4 +1,4 @@
-name = "flow-lean-optimizer"
+name = "flow-proof-optimizer"
 version = "0.1.0"
 defaultTargets = ["proof-pairs"]
 

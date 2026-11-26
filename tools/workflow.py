@@ -12,6 +12,12 @@ from root_paths import linked_reachability
 from unreferenced_family import source_declarations
 
 
+def newly_outside(before, after):
+    """Previously reachable project declarations absent from the new rooted graph."""
+    return sorted((module, name) for name, (module, _) in before
+                  if name not in after or after[name][0] != module)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path, help="Lake project directory")
@@ -20,6 +26,7 @@ def main():
     parser.add_argument("--root-module", default="Main", help="module importing every selected theorem")
     parser.add_argument("--source", default="src", help="project-relative Lean source directory")
     parser.add_argument("--library", default=".lake/build/lib/lean", help="matching compiled library")
+    parser.add_argument("--before", type=Path, help="previous report for the same roots, before the selected rewrite")
     args = parser.parse_args()
     project = args.project.resolve()
     source = (project / args.source).resolve()
@@ -64,6 +71,12 @@ def main():
         _, paths = linked_reachability(graph.items(), roots, targets)
         report = dict(roots=roots, modules=len(modules), reachable_declarations=len(graph),
                       module_islands=groups, outside_roots=outside, fragments=candidates, paths=paths)
+        if args.before:
+            old = json.loads((args.before / "report.json").read_bytes())
+            if set(old["roots"]) != set(roots):
+                parser.error("--before must cover the same theorem roots")
+            with gzip.open(args.before / "graph.jsonl.gz", "rt") as stream:
+                report["newly_outside_roots"] = newly_outside(map(json.loads, stream), graph)
         (stage / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
         stage.rename(output)
     print(f"{len(modules)} modules, {len(graph)} reachable declarations, "

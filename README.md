@@ -1,8 +1,8 @@
-# Flow Lean Optimizer
+# Flow Proof Optimizer
 
 **Author: Yuanjie (Collin) Ren from Atomic Inference Inc.**
 
-Flow Lean Optimizer finds unused and repeated derivations in Lean 4 projects. Give it a built project and the names of the theorems you care about. It traces their dependencies, locates candidate changes in the source, and gives you evidence to decide which changes to make. For supported patterns it can extract a shared lemma, compile the replacements at their original call sites, and replay their proof terms.
+Flow Proof Optimizer finds unused and repeated derivations in Lean 4 projects. Give it a built project and the names of the theorems you care about. It traces their dependencies, locates candidate changes in the source, and gives you evidence to decide which changes to make. For supported patterns it can extract a shared lemma, compile the replacements at their original call sites, and replay their proof terms.
 
 The scanners, patch generator, replay checks, and size measurements run locally with Python and Lean. An optional model interface supports mathematical review when a candidate needs an insight, such as recognizing that one implication follows from the other by an involution. Some upstream patches were written this way after deterministic discovery.
 
@@ -68,6 +68,22 @@ To inspect possible upstream overlap, run the read-only command below with GitHu
 python3 tools/upstream.py OWNER/REPO src/MyProject/Provider.lean --author GITHUB_LOGIN
 ```
 
+### Reuse an existing proof at a selected cut
+
+Choose a complete tactic block inside a surviving declaration. At that location, the local hypotheses, instances and imports determine which providers Lean can actually use. The following command tries instance synthesis and then Lean’s library search. It compiles the module again with the explicit suggestion in place of the original block. On the example it replaces four tactic lines with `exact ⟨hp, hq⟩`, saving three lines and 50 UTF-8 bytes.
+
+```sh
+python3 tools/provider_site.py examples/tiny Demo.Right examples/tiny/src/Demo/Right.lean 8 11
+```
+
+The range is inclusive. Use `--term` for a complete term on separate lines after `:=`, and pass the project's Lean options with `--lean-arg`. A replayed suggestion has a checked call site. A claim that two proofs share the same derivation still requires structural comparison. Before proposing the change, read the diff and measure the affected reachable proof bodies. After a miss, search the documentation of the imported modules using the mathematical names of the construction. A name found in a docstring is a lead to try at the original site. [Provider probe](tools/provider_site.py) · [Result-symbol search](tools/result_providers.py)
+
+A retrospective check at the original first proper-action binding in RH #7797 recovered `inferInstance` and replayed the surrounding module, saving seven lines and 520 bytes in that block. The experiment supplied the site. On RH m42b the same library-search strategy failed to close the 25-line Schur monomial surjectivity argument and the 21-line openness argument in the global norm theorem. Both contain substantive intermediate constructions. [Merged coset-integral proof](https://github.com/leanprover-community/riemann-hypothesis/pull/7797/files) · [Schur matrix proof](https://github.com/leanprover-community/riemann-hypothesis/blob/61d870d08d5f6f5cc12f31fe40f5689024ea15ab/src/Lib/GLn/SchurModule/SchurMatrix.lean#L921-L946) · [Global norm proof](https://github.com/leanprover-community/riemann-hypothesis/blob/61d870d08d5f6f5cc12f31fe40f5689024ea15ab/src/Lib/ClassField/Global/NormTheorems.lean#L194-L215)
+
+For a local binding whose source extent is ambiguous, the cascade can ask Lean for tactic ranges and the goals before and after a tactic in the selected declaration. It then removes only the binding, preserving a sibling tactic after a semicolon. The strict checker still recompiles the module and compares the resulting proof term. On RH, removing `hrow` from a line shared with `hcol` made a later `lia` fail. The original proof was kept. [Tactic spans](tools/TacticSpans.lean) · [Local cascade](tools/local_cascade.py)
+
+After a larger rewrite, pass `--before PREVIOUS_REPORT_DIRECTORY` to the workflow with the same roots. The `newly_outside_roots` list contains each former owner and name once. Use it on corresponding before/after builds, then check surviving callers and registrations before considering deletion. Independent candidates can run in separate temporary directories with the same imported build products. Compile modules that depend on one another in import order.
+
 ## Optional LLM interface
 
 Use a model when the open question is mathematical. For example, do two constructions share a useful invariant, which hypothesis should become an argument, or would the proposed helper make the proof harder to follow? The interface sends one selected candidate through standard input and returns the reviewer's text on standard output. The packet contains theorem names, common roots, and matched line ranges. The optional `--source` flag includes the source between the first and last match on each side.
@@ -95,14 +111,17 @@ A provider wrapper can use the same contract. Model output is advisory text. A p
 5. **The scope of a canonical form.** Aaron Stump and Li-Yang Tan, *The Algebra of Equality Proofs*, RTA 2005, study a restricted equality-proof algebra and the role of independent assumptions. Arthur F. Ramos, Ruy J. G. B. de Queiroz, and Anjolina G. de Oliveira, *On the Identity Type as the Type of Computational Paths*, §4, give explicit reductions involving symmetry, transitivity, and reflexivity. These are precedents for stating the generators and the cost model when claiming a canonical result. [Stump and Tan](https://cshub.bc.edu/stumpaa/papers/rta05.pdf) · [Ramos et al.](https://arxiv.org/pdf/1504.04759)
 6. **Checking proposals.** Leonardo de Moura and Sebastian Ullrich, *The Lean 4 Theorem Prover and Programming Language*, CADE 2021. Lean's elaborator and kernel let a search procedure propose a readable replacement and have Lean check its type. Flow adds the separate structural comparison and net-size measurements described above. [Paper](https://lean-lang.org/papers/lean4.pdf)
 
+7. **Tactic-state pruning and replay.** Daniel Selsam’s Lean 3 cleaner in OpenAI’s lean-gym tracks the continuation goals when deleting a tactic region. Meta’s Evariste documents how a hypothesis can guide later tactics even when it disappears from the final term. Flow uses Lean 4 tactic information and its own replay implementation. [lean-gym source](https://github.com/openai/lean-gym/blob/1585ac4d2e56a1ceb72243ce859645b9d0069d34/src/tools/shrink_proof.lean) · [Evariste source](https://github.com/facebookresearch/Evariste/blob/ef43511f2d234bcb28e380388b8fe0d06a4d93a7/formal/runtime_loaded_lean_files/cleaning_utils/v1/useless_tactics_removal.lean)
+8. **Dependency restructuring and retrieval.** The LeanLean study of 64 repositories distinguishes source compression from elaboration cost. Anthropic’s FLT report describes the Columbia team’s Prove2Me interface for navigating statements and their descriptions. Flow uses documentation for discovery and Lean’s own library search to test a candidate in context. [LeanLean](https://www.sri.inf.ethz.ch/publications/rognvaldsson2026leanlean) · [FLT report](https://www.anthropic.com/research/formalizing-fermats-last-theorem) · [Lean library search](https://github.com/leanprover/lean4/blob/v4.37.0-rc1/src/Lean/Meta/Tactic/LibrarySearch.lean)
+
 ## Accepted applications in the Riemann Hypothesis project
 
 Four examples show why the useful unit of work varies. Removing an unused Fock pairing block saved **372 source lines** while retaining the public theorem. In partial Hecke duality, applying the forward implication twice with swapped indices and the dual-lattice involution removed the separate converse calculation. In the Hodge–Tate cup projections, two results share the same objectwise splitting. The Fock vacuum refactor provides an example with structural replay: specializing a single proof at both call sites removed 82 source lines and reduced the union of the two measured proof bodies from 32,151 to 24,207 expression nodes. [#1337](https://github.com/leanprover-community/riemann-hypothesis/pull/1337) · [#7344](https://github.com/leanprover-community/riemann-hypothesis/pull/7344) · [#7709](https://github.com/leanprover-community/riemann-hypothesis/pull/7709) · [#4575](https://github.com/leanprover-community/riemann-hypothesis/pull/4575)
 
-As of November 26, 2026, GitHub records **111 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
+As of November 26, 2026, GitHub records **113 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
 
 <details>
-<summary>Current main history · 48 merged PRs</summary>
+<summary>Current main history · 50 merged PRs</summary>
 
 | PR | Accepted change |
 | --- | --- |
@@ -154,6 +173,8 @@ As of November 26, 2026, GitHub records **111 merged upstream PRs** from this wo
 | [#7640](https://github.com/leanprover-community/riemann-hypothesis/pull/7640) | Read the Bessel frame coefficients directly from the isotropic rows |
 | [#7690](https://github.com/leanprover-community/riemann-hypothesis/pull/7690) | Share the monic residue evaluation for opposite nodes |
 | [#7709](https://github.com/leanprover-community/riemann-hypothesis/pull/7709) | Share the objectwise splitting in the two Hodge–Tate cup projections |
+| [#7752](https://github.com/leanprover-community/riemann-hypothesis/pull/7752) | Use the open character kernel in the local norm criterion |
+| [#7797](https://github.com/leanprover-community/riemann-hypothesis/pull/7797) | Reuse the proper-action instances in the coset integral |
 
 </details>
 

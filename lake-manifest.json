@@ -1,6 +1,6 @@
 {"version": "1.3.0",
  "packagesDir": ".lake/packages",
  "packages": [],
- "name": "«flow-lean-optimizer»",
+ "name": "«flow-proof-optimizer»",
  "lakeDir": ".lake",
  "fixedToolchain": false}
