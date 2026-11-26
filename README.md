@@ -122,10 +122,10 @@ A provider wrapper can use the same contract. Model output is advisory text. A p
 
 Four examples show why the useful unit of work varies. Removing an unused Fock pairing block saved **372 source lines** while retaining the public theorem. In partial Hecke duality, applying the forward implication twice with swapped indices and the dual-lattice involution removed the separate converse calculation. In the Hodge–Tate cup projections, two results share the same objectwise splitting. The Fock vacuum refactor provides an example with structural replay: specializing a single proof at both call sites removed 82 source lines and reduced the union of the two measured proof bodies from 32,151 to 24,207 expression nodes. [#1337](https://github.com/leanprover-community/riemann-hypothesis/pull/1337) · [#7344](https://github.com/leanprover-community/riemann-hypothesis/pull/7344) · [#7709](https://github.com/leanprover-community/riemann-hypothesis/pull/7709) · [#4575](https://github.com/leanprover-community/riemann-hypothesis/pull/4575)
 
-As of November 26, 2026, GitHub records **116 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
+As of November 26, 2026, GitHub records **121 merged upstream PRs** from this workflow. We checked their merge commits against both histories. The earlier default-branch history is now preserved on `alpoge`, so the base label displayed by GitHub alone would give a misleading breakdown. These are tool-assisted contributions across successive versions. The list includes proposals that needed mathematical review or an individually written replacement.
 
 <details>
-<summary>Current main history · 53 merged PRs</summary>
+<summary>Current main history · 58 merged PRs</summary>
 
 | PR | Accepted change |
 | --- | --- |
@@ -182,6 +182,11 @@ As of November 26, 2026, GitHub records **116 merged upstream PRs** from this wo
 | [#7826](https://github.com/leanprover-community/riemann-hypothesis/pull/7826) | Use the zero-section retraction and functoriality of evaluation |
 | [#7899](https://github.com/leanprover-community/riemann-hypothesis/pull/7899) | Share the pair-indexed sum estimate for remaining terms |
 | [#8074](https://github.com/leanprover-community/riemann-hypothesis/pull/8074) | Use measurable multiplication on the Bessel graph in the integral |
+| [#8132](https://github.com/leanprover-community/riemann-hypothesis/pull/8132) | Share the middle and reversed-index facts for string frames |
+| [#8210](https://github.com/leanprover-community/riemann-hypothesis/pull/8210) | Share the entrywise second-moment calculation |
+| [#8218](https://github.com/leanprover-community/riemann-hypothesis/pull/8218) | Share the block-column identity for the position stabilizer |
+| [#8233](https://github.com/leanprover-community/riemann-hypothesis/pull/8233) | Share the dot-product calculation for congruent frame lifts |
+| [#8254](https://github.com/leanprover-community/riemann-hypothesis/pull/8254) | Compute the Bessel graph action on the definite frame |
 
 </details>
 
