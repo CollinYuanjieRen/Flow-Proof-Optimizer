@@ -51,9 +51,10 @@ def find_sites(module, lines, decls, minimum):
             indent = len(match[1])
             k = i
             while k + 1 < end and not MARK.search(lines[k]):
-                # A term proof can start on the next line (for example with calc).
-                # Its internal tactic blocks do not prove the enclosing have.
-                if lines[k].rstrip().endswith(":="):
+                # Stop at a term proof, including a lambda whose body starts with by.
+                # A nested have owns its own tactic block.
+                code = lines[k].partition("--")[0].rstrip()
+                if code.endswith(":=") or re.search(r":=\s*fun\b.*\bby$", code):
                     break
                 k += 1
                 if lines[k].strip() and len(lines[k]) - len(lines[k].lstrip()) <= indent:
