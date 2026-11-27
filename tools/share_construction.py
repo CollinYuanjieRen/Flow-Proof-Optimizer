@@ -199,6 +199,19 @@ def module_path(name):
     return Path(*name.split(".")).with_suffix(".lean")
 
 
+def single_site_captures(lines, expected):
+    """A tactic under all_goals can elaborate the same source site more than once."""
+    found = {}
+    for line in lines:
+        if line.startswith("SHARE_SITE "):
+            item = json.loads(line[len("SHARE_SITE "):])
+            key = item["id"]
+            if key not in expected:
+                raise ValueError(f"unexpected probe {key}")
+            found[key] = None if key in found else item
+    return {key: item for key, item in found.items() if item is not None}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
@@ -335,15 +348,8 @@ def main():
         if not ok:
             unresolved.extend(expected)
             continue
-        found = set()
-        for line in log.read_text().splitlines():
-            if not line.startswith("SHARE_SITE "):
-                continue
-            item = json.loads(line[len("SHARE_SITE ") :])
-            key = item["id"]
-            if key not in expected or key in found:
-                raise ValueError(f"ambiguous probe {key}")
-            found.add(key)
+        found = single_site_captures(log.read_text().splitlines(), expected)
+        for key, item in found.items():
             catalog[key] = expected[key]
             captures[key] = item
             grouped[tuple(item["symbols"])].append(key)

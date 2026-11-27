@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
-from share_construction import find_sites
+from share_construction import find_sites, single_site_captures
 
 
 class HaveSitesTest(unittest.TestCase):
@@ -39,3 +39,13 @@ class HaveSitesTest(unittest.TestCase):
         decls = {"example": {"theorem": "example", "first_line": 1, "last_line": len(lines)}}
         sites = list(find_sites("Example", lines, decls, minimum=1))
         self.assertEqual([(s.start, s.assignment, s.end) for s in sites], [(4, 4, 6)])
+
+
+class CaptureTest(unittest.TestCase):
+    def test_repeated_site_does_not_hide_other_sites(self):
+        repeated = 'SHARE_SITE {"id":"many"}'
+        single = 'SHARE_SITE {"id":"one"}'
+        self.assertEqual(
+            single_site_captures([repeated, single, repeated, repeated], {"many", "one", "missing"}),
+            {"one": {"id": "one"}},
+        )
