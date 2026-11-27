@@ -25,6 +25,19 @@ class HaveSitesTest(unittest.TestCase):
         sites = list(find_sites("Example", lines, decls, minimum=1))
         self.assertEqual([(s.start, s.assignment, s.end) for s in sites], [(3, 3, 5), (6, 7, 9)])
 
+    def test_nested_have_in_function_argument(self):
+        lines = [
+            "example : True := by",
+            "  have outer : True := (fun f => f trivial) fun h ↦ by",
+            "    have inner : True := by",
+            "      exact h",
+            "    exact inner",
+            "  exact outer",
+        ]
+        decls = {"example": {"theorem": "example", "first_line": 1, "last_line": len(lines)}}
+        sites = list(find_sites("Example", lines, decls, minimum=1))
+        self.assertEqual([(s.start, s.assignment) for s in sites], [(2, 2)])
+
     def test_calc_step_does_not_own_enclosing_have(self):
         lines = [
             "example (a b : Nat) (h : a = b) : a = b := by",

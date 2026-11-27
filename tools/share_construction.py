@@ -54,7 +54,7 @@ def find_sites(module, lines, decls, minimum):
                 # Stop at a term proof, including a lambda whose body starts with by.
                 # A nested have owns its own tactic block.
                 code = lines[k].partition("--")[0].rstrip()
-                if code.endswith(":=") or re.search(r":=\s*(?:calc|fun\b.*\bby)$", code):
+                if code.endswith(":=") or re.search(r":=(?:\s*calc|.*\bfun\b.*\bby)$", code):
                     break
                 k += 1
                 if lines[k].strip() and len(lines[k]) - len(lines[k].lstrip()) <= indent:
